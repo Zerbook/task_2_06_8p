@@ -1,12 +1,4 @@
-import {
-	Routes,
-	Route,
-	NavLink,
-	Outlet,
-	useParams,
-	useMatch,
-	useNavigate,
-} from 'react-router-dom';
+import { Routes, Route, NavLink, Outlet, useParams, useNavigate } from 'react-router-dom';
 import styles from './app.module.css';
 import { useState, useEffect } from 'react';
 
@@ -23,7 +15,7 @@ const database = {
 	},
 };
 
-const LOADING_TIMEOUT = 5000;
+const LOADING_TIMEOUT = 3000;
 
 const fetchProductList = () => database.productList;
 
@@ -60,23 +52,33 @@ const Product = () => {
 
 	useEffect(() => {
 		let isLoadingTimeout = false;
+		let isProductLoaded = false;
 
 		setTimeout(() => {
 			isLoadingTimeout = true;
 
-			navigate('/product-load-error');
+			if (!isProductLoaded) {
+				navigate('/product-load-error', { replace: true });
+			}
 		}, LOADING_TIMEOUT);
 
 		fetchProduct(params.id).then((loadedProduct) => {
+			isProductLoaded = true;
+
 			if (!isLoadingTimeout) {
+				if (!loadedProduct) {
+					navigate('/product-not-exist');
+					return;
+				}
 				setProduct(loadedProduct);
 			}
 		});
-	}, []);
+	}, [params.id, navigate]);
 
 	if (!product) {
-		return <ProductNotFound />;
+		return null;
 	}
+
 	const { name, price, amout } = product;
 	return (
 		<div>
@@ -130,6 +132,7 @@ const App = () => {
 				</Route>
 				<Route path="/contacts" element={<Contacts />} />
 				<Route path="/product-load-error" element={<ProductLoadError />} />
+				<Route path="/product-not-exist" element={<ProductNotFound />} />
 				<Route path="*" element={<NotFound />} />
 			</Routes>
 		</div>
